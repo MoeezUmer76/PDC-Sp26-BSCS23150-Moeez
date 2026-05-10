@@ -58,8 +58,19 @@ def update_document(
     doc = db.query(Document).filter(Document.id == doc_id).first()
 
     if not doc:
-        raise HTTPException(status_code=404, detail="Document not found")
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found"
+        )
 
+    # Optimistic Locking Check
+    if update.version != doc.version:
+        raise HTTPException(
+            status_code=409,
+            detail="Conflict detected. Document was modified by another user."
+        )
+
+    # Safe update
     doc.content = update.content
     doc.version += 1
 
